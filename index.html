@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>שעות משמרת</title>
+<meta name="theme-color" content="#b4540a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="שעות משמרת">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap">
+<style>
+/* Layout: one narrow column. Month header, four figures, quick-entry form, then the shift log as a table. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --fg:#14202e; --muted:#5d6b7c; --line:#dbe1e9;
+  --accent:#b4540a; --accent-fg:#ffffff; --accent-soft:#fbe9d8; --night:#2d4a73; --good:#1f7a4d; --bad:#b3261e;
+  --font:"Heebo",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e151e; --surface:#16202c; --fg:#e8edf3; --muted:#9aa8b8; --line:#273445;
+  --accent:#f0a05a; --accent-fg:#1a0f05; --accent-soft:#3a2615; --night:#8fb2e6; --good:#5cc592; --bad:#ff8f86; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e151e; --surface:#16202c; --fg:#e8edf3; --muted:#9aa8b8; --line:#273445;
+  --accent:#f0a05a; --accent-fg:#1a0f05; --accent-soft:#3a2615; --night:#8fb2e6; --good:#5cc592; --bad:#ff8f86; color-scheme:dark}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.5;direction:rtl;
+  padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:15px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin:0}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.month{display:flex;align-items:center;gap:8px}
+.month strong{font-size:26px;font-weight:800;min-width:9ch;text-align:center;text-wrap:balance}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.icon{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-size:18px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.fig{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.fig span{font-size:13px;color:var(--muted)}
+.fig b{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.fig.main{background:var(--accent-soft);border-color:transparent}
+.fig.main b{color:var(--accent)}
+.fig small{font-size:12px;color:var(--muted)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+.target{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.target input{width:7ch;text-align:center;padding:4px 6px}
+form{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0;width:100%;box-sizing:border-box;direction:ltr;text-align:right}
+input[type=text]{direction:rtl}
+.wide{grid-column:1/-1}
+.actions{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.primary{background:var(--accent);color:var(--accent-fg);border:0;border-radius:10px;padding:10px 20px;font-weight:700}
+.ghost{background:none;border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.hint{font-size:13px;color:var(--muted)}
+.msg{font-size:13px;color:var(--bad)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--muted);font-weight:500}
+tr:last-child td{border-bottom:0}
+td.note{white-space:normal;color:var(--muted);min-width:8ch}
+td.hrs{font-weight:700}
+.night{color:var(--night)}
+.rowbtn{background:none;border:0;color:var(--muted);padding:4px 8px;text-decoration:underline;font-size:13px}
+.rowbtn.del{color:var(--bad)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.status{font-size:12px;color:var(--muted);text-align:center}
+@media(prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <h1>מעקב שעות עבודה</h1>
+    <div class="month">
+      <button class="icon" id="next" aria-label="חודש הבא">›</button>
+      <strong id="monthName"></strong>
+      <button class="icon" id="prev" aria-label="חודש קודם">‹</button>
+    </div>
+  </div>
+
+  <div class="figs">
+    <div class="fig main"><span>סה״כ שעות בחודש</span><b id="fTotal">0:00</b>
+      <div class="bar"><i id="fBar" style="width:0%"></i></div><small id="fLeft"></small></div>
+    <div class="fig"><span>משמרות</span><b id="fCount">0</b><small id="fAvg"></small></div>
+    <div class="fig"><span>שעות לילה (22:00–06:00)</span><b class="night" id="fNight">0:00</b></div>
+    <div class="fig"><span>משמרות ארוכות מ־9 שעות</span><b id="fLong">0</b></div>
+    <div class="fig"><span>שכר ברוטו משוער</span><b id="fPay">₪0</b><small id="fPayNote"></small></div>
+  </div>
+  <div class="target"><label style="flex-direction:row;align-items:center;gap:8px">יעד שעות חודשי
+    <input id="target" type="number" min="0" max="400" step="1" value="182" inputmode="numeric"></label>
+    <label style="flex-direction:row;align-items:center;gap:8px">תעריף לשעה (₪)
+    <input id="rate" type="number" min="0" max="1000" step="0.01" value="0" inputmode="decimal"></label>
+    <span id="targetState"></span></div>
+
+  <form id="form" autocomplete="off">
+    <label>תאריך<input id="date" type="date" required></label>
+    <label>כניסה<input id="start" type="time" required value="07:00"></label>
+    <label>יציאה<input id="end" type="time" required value="19:00"></label>
+    <label>הפסקה (דקות)<input id="brk" type="number" min="0" max="240" step="5" value="30" inputmode="numeric"></label>
+    <label class="wide">אתר / הערה<input id="note" type="text" maxlength="80" placeholder="למשל: קניון, שער ראשי"></label>
+    <div class="actions">
+      <button class="primary" id="save" type="submit">הוספת משמרת</button>
+      <button class="ghost" id="cancel" type="button" hidden>ביטול עריכה</button>
+      <span class="hint" id="preview"></span>
+      <span class="msg" id="err" role="alert"></span>
+    </div>
+  </form>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>תאריך</th><th>כניסה</th><th>יציאה</th><th>הפסקה</th><th>שעות</th><th>מזה לילה</th><th>שכר</th><th>הערה</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" hidden>עוד לא נרשמו משמרות בחודש הזה. מלא את הטופס למעלה כדי להוסיף את הראשונה.</div>
+  </div>
+  <div class="actions" style="justify-content:center">
+    <button class="ghost" id="export" type="button" hidden>ייצוא החודש ל־CSV</button>
+    <span class="hint" id="exportMsg" role="status"></span>
+  </div>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var shifts=[];            // all shifts, each {id,date,start,end,brk,note,mins,night}
+  var view=new Date(); view.setDate(1);
+  var target=182, rate=0, editing=null, store=null, uid=null, confirmId=null;
+  var heb=new Intl.DateTimeFormat('he-IL',{weekday:'short'});
+  var monthFmt=new Intl.DateTimeFormat('he-IL',{month:'long',year:'numeric'});
+
+  function pad(n){return (n<10?'0':'')+n}
+  function ymd(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+  function toMin(t){var p=t.split(':');return (+p[0])*60+(+p[1])}
+  function fmt(m){m=Math.max(0,Math.round(m));return Math.floor(m/60)+':'+pad(m%60)}
+  function calc(start,end,brk){
+    var s=toMin(start),e=toMin(end); if(e<=s)e+=1440;       // overnight shift
+    var gross=e-s, night=0;
+    for(var m=s;m<e;m++){var h=(m%1440)/60; if(h>=22||h<6)night++;}
+    brk=Math.min(brk||0,gross);
+    // break is taken out of the day part first; night minutes stay as logged
+    var net=gross-brk;
+    return {mins:net,night:Math.min(night,net)};
+  }
+  function money(m){return '₪'+(m).toLocaleString('he-IL',{minimumFractionDigits:2,maximumFractionDigits:2})}
+  function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+  /* ---------- storage: private per-user db doc tree, falls back to this browser ---------- */
+  var LS='shift-hours-v1';
+  function lsLoad(){try{var j=JSON.parse(localStorage.getItem(LS)||'{}');shifts=j.shifts||[];if(j.target)target=j.target;if(j.rate)rate=j.rate}catch(e){}}
+  function lsSave(){try{localStorage.setItem(LS,JSON.stringify({shifts:shifts,target:target,rate:rate}))}catch(e){}}
+
+  function init(){
+    $('date').value=ymd(new Date());
+    lsLoad();$('target').value=target;$('rate').value=rate||'';
+    $('status').textContent='הנתונים נשמרים במכשיר הזה בלבד. כדאי לייצא CSV מדי פעם לגיבוי.';
+    try{ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist() }catch(e){}
+    render();
+  }
+
+  /* ---------- render ---------- */
+  function render(){
+    $('monthName').textContent=monthFmt.format(view);
+    var key=view.getFullYear()+'-'+pad(view.getMonth()+1);
+    var list=shifts.filter(function(s){return s.date.slice(0,7)===key})
+      .sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.start<b.start?-1:1)});
+    var total=0,night=0,long=0;
+    list.forEach(function(s){total+=s.mins;night+=s.night;if(s.mins>540)long++});
+    $('fTotal').textContent=fmt(total);
+    $('fCount').textContent=list.length;
+    $('fAvg').textContent=list.length?'ממוצע '+fmt(total/list.length)+' למשמרת':'';
+    $('fNight').textContent=fmt(night);
+    $('fLong').textContent=long;
+    $('fPay').textContent=money(total/60*rate);
+    $('fPayNote').textContent=rate?money(rate)+' לשעה, בלי תוספות':'הגדר תעריף לשעה למטה';
+    var pct=target?Math.min(100,total/(target*60)*100):0;
+    $('fBar').style.width=pct+'%';
+    var left=target*60-total;
+    $('fLeft').textContent=target?(left>0?'נשארו '+fmt(left)+' ליעד':'עברת את היעד ב־'+fmt(-left)):'';
+    $('targetState').textContent='';
+    var tb=$('rows');tb.innerHTML='';
+    list.forEach(function(s){
+      var d=new Date(s.date+'T00:00:00');
+      var tr=document.createElement('tr');
+      var del=confirmId===s.id;
+      tr.innerHTML='<td>'+heb.format(d)+' '+pad(d.getDate())+'/'+pad(d.getMonth()+1)+'</td>'+
+        '<td>'+s.start+'</td><td>'+s.end+'</td><td>'+(s.brk||0)+' דק׳</td>'+
+        '<td class="hrs">'+fmt(s.mins)+'</td><td class="night">'+(s.night?fmt(s.night):'–')+'</td>'+
+        '<td>'+(rate?money(s.mins/60*rate):'–')+'</td>'+
+        '<td class="note">'+esc(s.note||'')+'</td>'+
+        '<td><button class="rowbtn" data-edit="'+s.id+'">עריכה</button>'+
+        '<button class="rowbtn del" data-del="'+s.id+'">'+(del?'בטוח? מחק':'מחיקה')+'</button></td>';
+      tb.appendChild(tr);
+    });
+    $('empty').hidden=list.length>0;
+  }
+
+  /* ---------- form ---------- */
+  function preview(){
+    var c=calc($('start').value||'00:00',$('end').value||'00:00',+$('brk').value||0);
+    $('preview').textContent=$('start').value&&$('end').value?'סה״כ למשמרת: '+fmt(c.mins)+(c.night?' (לילה '+fmt(c.night)+')':''):'';
+  }
+  ['start','end','brk'].forEach(function(id){$(id).addEventListener('input',preview)});
+
+  function resetForm(){
+    editing=null;$('save').textContent='הוספת משמרת';$('cancel').hidden=true;$('note').value='';$('err').textContent='';preview();
+  }
+  $('cancel').onclick=resetForm;
+
+  $('form').addEventListener('submit',async function(e){
+    e.preventDefault();$('err').textContent='';
+    var date=$('date').value,start=$('start').value,end=$('end').value;
+    if(!date||!start||!end){$('err').textContent='חסר תאריך או שעה.';return}
+    if(start===end){$('err').textContent='שעת הכניסה והיציאה זהות.';return}
+    var brk=Math.max(0,+$('brk').value||0);
+    var c=calc(start,end,brk);
+    var id=editing||('s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    var s={id:id,date:date,start:start,end:end,brk:brk,note:$('note').value.trim(),mins:c.mins,night:c.night};
+    var i=shifts.findIndex(function(x){return x.id===id});
+    if(i>=0)shifts[i]=s;else shifts.push(s);
+    var d=new Date(date+'T00:00:00');view=new Date(d.getFullYear(),d.getMonth(),1);
+    render();
+    try{ if(store)await store.save(s);else lsSave() }catch(err){$('err').textContent='השמירה נכשלה. נסה שוב.'}
+    resetForm();
+  });
+
+  $('rows').addEventListener('click',async function(e){
+    var ed=e.target.getAttribute('data-edit'),dl=e.target.getAttribute('data-del');
+    if(ed){
+      var s=shifts.find(function(x){return x.id===ed});if(!s)return;
+      editing=ed;$('date').value=s.date;$('start').value=s.start;$('end').value=s.end;$('brk').value=s.brk||0;$('note').value=s.note||'';
+      $('save').textContent='שמירת שינויים';$('cancel').hidden=false;preview();$('form').scrollIntoView({behavior:'smooth',block:'center'});
+    }else if(dl){
+      if(confirmId!==dl){confirmId=dl;render();return}
+      confirmId=null;
+      shifts=shifts.filter(function(x){return x.id!==dl});render();
+      try{ if(store)await store.remove(dl);else lsSave() }catch(err){$('err').textContent='המחיקה נכשלה.'}
+    }
+  });
+
+  $('target').addEventListener('change',async function(){
+    target=Math.max(0,+this.value||0);render();
+    try{ if(store)await store.saveSettings();else lsSave() }catch(e){}
+  });
+  $('rate').addEventListener('change',async function(){
+    rate=Math.max(0,+this.value||0);render();
+    try{ if(store)await store.saveSettings();else lsSave() }catch(e){}
+  });
+  $('prev').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()-1,1);confirmId=null;render()};
+  $('next').onclick=function(){view=new Date(view.getFullYear(),view.getMonth()+1,1);confirmId=null;render()};
+
+  /* ---------- CSV export of the month on screen ---------- */
+  function csvCell(v){
+    v=String(v==null?'':v);
+    if(/^[=+\-@\t\r]/.test(v))v="'"+v;          // keep spreadsheets from running notes as formulas
+    return '"'+v.replace(/"/g,'""')+'"';
+  }
+  function setupExport(){
+    try{
+      $('export').hidden=false;
+      $('export').onclick=async function(){
+        var key=view.getFullYear()+'-'+pad(view.getMonth()+1);
+        var list=shifts.filter(function(s){return s.date.slice(0,7)===key})
+          .sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:(a.start<b.start?-1:1)});
+        if(!list.length){$('exportMsg').textContent='אין משמרות לייצוא בחודש הזה.';return}
+        var rows=[['תאריך','יום','כניסה','יציאה','הפסקה (דקות)','שעות','שעות (עשרוני)','מזה לילה','שכר','הערה']];
+        var total=0,night=0;
+        list.forEach(function(s){
+          var d=new Date(s.date+'T00:00:00');total+=s.mins;night+=s.night;
+          rows.push([pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear(),heb.format(d),s.start,s.end,s.brk||0,
+            fmt(s.mins),(s.mins/60).toFixed(2),fmt(s.night),rate?(s.mins/60*rate).toFixed(2):'',s.note||'']);
+        });
+        rows.push(['סה״כ','','','','',fmt(total),(total/60).toFixed(2),fmt(night),rate?(total/60*rate).toFixed(2):'','']);
+        var text='﻿'+rows.map(function(r){return r.map(csvCell).join(',')}).join('\r\n');
+        try{
+          var url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'}));
+          var a=document.createElement('a');a.href=url;a.download='shifts-'+key+'.csv';
+          document.body.appendChild(a);a.click();a.remove();
+          setTimeout(function(){URL.revokeObjectURL(url)},4000);
+          $('exportMsg').textContent='';
+        }catch(e){
+          $('exportMsg').textContent='הייצוא לא זמין כרגע.';
+        }
+      };
+    }catch(e){}
+  }
+
+  preview();render();init();setupExport();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
+}
+</script>
+</body>
+</html>
