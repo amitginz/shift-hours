@@ -47,7 +47,7 @@ button{cursor:pointer}
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
 .bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
 .target{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
-.target input{width:7ch;text-align:center;padding:4px 6px}
+.target input{width:10ch;text-align:center;padding:4px 6px}
 form{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
 label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
 input{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-width:0;width:100%;box-sizing:border-box;direction:ltr;text-align:right}
@@ -101,8 +101,8 @@ td.hrs{font-weight:700}
 
   <form id="form" autocomplete="off">
     <label>תאריך<input id="date" type="date" required></label>
-    <label>כניסה<input id="start" type="time" required value="07:00"></label>
-    <label>יציאה<input id="end" type="time" required value="19:00"></label>
+    <label>כניסה<input id="start" type="text" inputmode="numeric" dir="ltr" maxlength="5" placeholder="07:00" autocomplete="off" required value="07:00"></label>
+    <label>יציאה<input id="end" type="text" inputmode="numeric" dir="ltr" maxlength="5" placeholder="19:00" autocomplete="off" required value="19:00"></label>
     <label>הפסקה (דקות)<input id="brk" type="number" min="0" max="240" step="5" value="30" inputmode="numeric"></label>
     <label class="wide">אתר / הערה<input id="note" type="text" maxlength="80" placeholder="למשל: קניון, שער ראשי"></label>
     <div class="actions">
@@ -207,9 +207,25 @@ td.hrs{font-weight:700}
 
   /* ---------- form ---------- */
   function preview(){
-    var c=calc($('start').value||'00:00',$('end').value||'00:00',+$('brk').value||0);
-    $('preview').textContent=$('start').value&&$('end').value?'סה״כ למשמרת: '+fmt(c.mins)+(c.night?' (לילה '+fmt(c.night)+')':''):'';
+    var a=normTime($('start').value),b=normTime($('end').value);
+    var c=calc(a||'00:00',b||'00:00',+$('brk').value||0);
+    $('preview').textContent=a&&b?'סה״כ למשמרת: '+fmt(c.mins)+(c.night?' (לילה '+fmt(c.night)+')':''):'';
   }
+  // Time fields are plain text so digits keep their order in a right-to-left page; a colon is added as you type.
+  function normTime(v){
+    var m=/^(\d{1,2}):?(\d{2})$/.exec((v||'').trim());
+    if(!m)return null;
+    var h=+m[1],mi=+m[2];
+    if(h>23||mi>59)return null;
+    return pad(h)+':'+pad(mi);
+  }
+  ['start','end'].forEach(function(id){
+    $(id).addEventListener('input',function(){
+      var d=this.value.replace(/\D/g,'').slice(0,4);
+      this.value=d.length>2?d.slice(0,d.length-2)+':'+d.slice(-2):d;
+    });
+    $(id).addEventListener('blur',function(){var n=normTime(this.value);if(n)this.value=n;preview()});
+  });
   ['start','end','brk'].forEach(function(id){$(id).addEventListener('input',preview)});
 
   function resetForm(){
@@ -219,8 +235,8 @@ td.hrs{font-weight:700}
 
   $('form').addEventListener('submit',async function(e){
     e.preventDefault();$('err').textContent='';
-    var date=$('date').value,start=$('start').value,end=$('end').value;
-    if(!date||!start||!end){$('err').textContent='חסר תאריך או שעה.';return}
+    var date=$('date').value,start=normTime($('start').value),end=normTime($('end').value);
+    if(!date||!start||!end){$('err').textContent='חסר תאריך, או שעה לא תקינה (למשל 07:00).';return}
     if(start===end){$('err').textContent='שעת הכניסה והיציאה זהות.';return}
     var brk=Math.max(0,+$('brk').value||0);
     var c=calc(start,end,brk);
